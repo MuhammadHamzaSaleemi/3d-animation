@@ -4,10 +4,10 @@ import { OrbitControls, useGLTF } from '@react-three/drei';
 
 const RotatingGlass = () => {
   const glassRef = useRef();
-  const { scene } = useGLTF('/black-glb.glb');
+  const { scene } = useGLTF('/black-glb.glb'); // Ensure the path to your GLB file is correct
 
   const [scrollY, setScrollY] = useState(0);
-
+  
   // Track the scroll position
   useEffect(() => {
     const handleScroll = () => {
@@ -18,20 +18,33 @@ const RotatingGlass = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Update rotation based on scroll and automatic rotation
+  // Update rotation and position based on scroll
   useFrame(() => {
     if (glassRef.current) {
-      // Calculate max scroll position
+      // Calculate the maximum scrollable height
       const maxScroll = document.body.scrollHeight - window.innerHeight;
-      const normalizedScroll = scrollY / maxScroll; // Normalizes scroll between 0 and 1
+      const normalizedScroll = scrollY / maxScroll; // Normalize scroll between 0 and 1
 
-      // Rotate the glass based on the scroll position
-      const rotationAngle = Math.sin(normalizedScroll * Math.PI) * Math.PI; // Full 180 degrees forward and then backward
-      glassRef.current.rotation.y = rotationAngle + performance.now() * 0.001; // Continuous rotation effect
+      // Rotation calculations
+      const xRotation = normalizedScroll * Math.PI * 2; // Full 360-degree rotation for flipping effect
+      const yRotation = normalizedScroll * Math.PI * 4; // Adjust multiplier for faster/slower Y-axis rotation
+
+      glassRef.current.rotation.x = xRotation; // Rotate around the X-axis
+      glassRef.current.rotation.y = yRotation - Math.PI / 2; // Start rotated 90 degrees around the Y-axis
+
+      // Update position to move down as you scroll
+      const moveDistance = -normalizedScroll * 5; // Adjust the multiplier for the range of movement
+      glassRef.current.position.y = moveDistance + Math.sin(Date.now() / 500) * 0.2; // Combine scroll movement and oscillation
     }
   });
 
-  return <primitive ref={glassRef} object={scene} />;
+  return (
+    <primitive 
+      ref={glassRef} 
+      object={scene} 
+      scale={[1.5, 1.5, 1.5]} // Increase the scale for larger size; adjust values as needed
+    />
+  );
 };
 
 const App = () => {
@@ -46,8 +59,8 @@ const App = () => {
         <Suspense fallback={null}>
           <RotatingGlass />
         </Suspense>
-        {/* Enable zoom functionality */}
-        <OrbitControls enableZoom={true} />
+        {/* Disable zoom and other controls */}
+        <OrbitControls enableZoom={false} enableRotate={false} />
       </Canvas>
     </div>
   );
