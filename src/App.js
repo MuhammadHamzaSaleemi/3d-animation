@@ -4,6 +4,7 @@ import { OrbitControls, useGLTF } from '@react-three/drei';
 
 const RotatingGlass = () => {
   const glassRef = useRef();
+  const groupRef = useRef();
   const { scene } = useGLTF('/black-glb.glb'); // Ensure the path to your GLB file is correct
 
   const [scrollY, setScrollY] = useState(0);
@@ -20,7 +21,7 @@ const RotatingGlass = () => {
 
   // Update rotation and position based on scroll
   useFrame(() => {
-    if (glassRef.current) {
+    if (groupRef.current) {
       // Calculate the maximum scrollable height
       const maxScroll = document.body.scrollHeight - window.innerHeight;
       const normalizedScroll = scrollY / maxScroll; // Normalize scroll between 0 and 1
@@ -29,21 +30,25 @@ const RotatingGlass = () => {
       const xRotation = normalizedScroll * Math.PI * 10; // Full 360-degree rotation for flipping effect
       const yRotation = normalizedScroll * Math.PI * 30; // Adjust multiplier for faster/slower Y-axis rotation
 
-      glassRef.current.rotation.x = xRotation; // Rotate around the X-axis
-      glassRef.current.rotation.y = yRotation - Math.PI / 2; // Start rotated 90 degrees around the Y-axis
+      groupRef.current.rotation.x = xRotation; // Rotate around the X-axis
+      groupRef.current.rotation.y = yRotation - Math.PI / 2; // Start rotated 90 degrees around the Y-axis
 
       // Update position to move down as you scroll
       const moveDistance = -normalizedScroll * 5; // Adjust the multiplier for the range of movement
-      glassRef.current.position.y = moveDistance + Math.sin(Date.now() / 500) * 0.2; // Combine scroll movement and oscillation
+      groupRef.current.position.y = moveDistance + Math.sin(Date.now() / 500) * 0.2; // Combine scroll movement and oscillation
     }
   });
 
   return (
-    <primitive
-      ref={glassRef}
-      object={scene}
-      scale={[1.5, 1.5, 1.5]} // Increase the scale for larger size; adjust values as needed
-    />
+    <group ref={groupRef}>
+      {/* Adjust the position of the glass model to shift its pivot point to the center */}
+      <primitive
+        ref={glassRef}
+        object={scene}
+        scale={[2.5, 2.5, 2.7]} // Increase the scale for larger size; adjust values as needed
+        position={[0, -1.5, 0]} // Adjust the Y position to move the model's center to the group's origin
+      />
+    </group>
   );
 };
 
@@ -63,7 +68,7 @@ const App = () => {
       </Canvas>
 
       {/* Container for all sections with top padding equal to the height of the canvas */}
-      <div style={{ paddingTop: '100vh', position: 'relative', zIndex: 2 }}>
+      <div style={{ paddingTop: '130vh', position: 'relative', zIndex: 2 }}>
         {/* First Section */}
         <section style={{ 
           backgroundColor: 'rgba(120, 162, 173, 0.8)', // Slightly transparent background
